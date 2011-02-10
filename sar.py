@@ -67,15 +67,15 @@ def main():
             if not os.access(path, os.R_OK):
                 return error(u'Not enough rights for reading from %s' % path)
 
-    from algorithms.rle import compress, decompress
+    worker = __import__('algorithms.%s' % options.method, fromlist=['algorithms'])
     if options.create:
         with open(files[0], 'rb') as fsrc:
             with open(archive, 'wb') as fdst:
-                compress(BufferedReader(fsrc), os.path.getsize(files[0]), fdst)
+                worker.compress(BufferedReader(fsrc), os.path.getsize(files[0]), fdst)
     else:
         with open(archive, 'rb') as fsrc:
             with open(files[0], 'wb') as fdst:
-                decompress(BufferedReader(fsrc), os.path.getsize(archive), fdst)
+                worker.decompress(BufferedReader(fsrc), os.path.getsize(archive), fdst)
 
     return 0
 

@@ -1,1 +1,1 @@
-__all__ = ['rle']
+__all__ = ['huffman', 'rle']
