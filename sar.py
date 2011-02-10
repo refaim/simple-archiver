@@ -45,7 +45,6 @@ def main():
         # !!!
     if options.method not in COMPRESSION_METHODS:
         oparser.error('Unknown compression method: %s' % options.method)
-
     if (options.create and len(args) < 2):# or (options.extract and len(args) > 1):
         oparser.error('Wrong number of arguments')
     args = [os.path.abspath(arg).decode(locale.getpreferredencoding())
@@ -55,7 +54,7 @@ def main():
 
     # !!!
     files = args[1:]
-    
+
     if options.extract:
         if not os.access(archive_dir, os.R_OK):
             return error(u'Not enough rights for reading from %s' % archive_dir)
