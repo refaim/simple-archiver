@@ -9,6 +9,7 @@ import optparse
 import locale
 
 import console
+from reader import BufferedReader
 
 COMPRESSION_METHODS = (
     'huffman',
@@ -70,11 +71,11 @@ def main():
     if options.create:
         with open(files[0], 'rb') as fsrc:
             with open(archive, 'wb') as fdst:
-                compress(fsrc, os.path.getsize(files[0]), fdst)
+                compress(BufferedReader(fsrc), os.path.getsize(files[0]), fdst)
     else:
         with open(archive, 'rb') as fsrc:
             with open(files[0], 'wb') as fdst:
-                decompress(fsrc, os.path.getsize(archive), fdst)
+                decompress(BufferedReader(fsrc), os.path.getsize(archive), fdst)
 
     return 0
 

@@ -2,61 +2,58 @@
 
 import console
 
-BUF_SIZE = 10 * (2 ** 20) # 10 mb
+MAX_BYTE = 255
 
-def compress(fsrc, fsize, fdst):
+def compress(reader, fsize, fdst):
     result = bytearray()
     prev = None
     found = False
     count = 0
     pbar = console.ProgressBar(maxval=fsize)
     pbar.start()
-    data = fsrc.read(BUF_SIZE)
-    while data:
-        for char in data:
+    for chunk in reader:
+        for byte in chunk:
             if found:
-                if char == prev and count < 255:
+                if byte == prev and count < MAX_BYTE:
                     count += 1
                 else:
                     result.append(count)
-                    if char != prev:
-                        result.append(char)
+                    if byte != prev:
+                        result.append(byte)
                     else:
                         result.append(prev)
                     count = 0
                     found = False
             else:
-                result.append(char)
-                found = char == prev
-            prev = char
-        pbar.update(len(data))
-        data = fsrc.read(BUF_SIZE)
-        if not data and count > 0:
-            result.append(count)
+                result.append(byte)
+                found = byte == prev
+            prev = byte
+        pbar.update(reader.chunk_size)
         fdst.write(result)
         result = bytearray()
+    if count > 0:
+        fdst.write(bytearray([count]))
     pbar.finish()
 
-def decompress(fsrc, fsize, fdst):
+def decompress(reader, fsize, fdst):
     result = bytearray()
     prev = None
     found = False
     pbar = console.ProgressBar(maxval=fsize)
-    data = fsrc.read(BUF_SIZE)
-    while data:
-        for char in data:
+    pbar.start()
+    for chunk in reader:
+        for byte in chunk:
             if found:
-                count = ord(char)
+                count = ord(byte)
                 if count:
                     result.extend(prev * count)
                 found = False
                 prev = None
             else:
-                result.append(char)
-                found = char == prev
-                prev = char
-        pbar.update(len(data))
-        data = fsrc.read(BUF_SIZE)
+                result.append(byte)
+                found = byte == prev
+                prev = byte
+        pbar.update(reader.chunk_size)
         fdst.write(result)
         result = bytearray()
     pbar.finish()
