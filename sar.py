@@ -75,7 +75,7 @@ def main():
     else:
         src = archive
         dst = files[0]
-        handler = worker.decompress
+        handler = worker.uncompress
 
     with open(src, 'rb') as fsrc:
         with open(dst, 'wb') as fdst:

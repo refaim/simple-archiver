@@ -26,7 +26,7 @@ def compress(reader, fdst, pbar):
     if count:
         fdst.write(bytearray([count]))
 
-def decompress(reader, fdst, pbar):
+def uncompress(reader, fdst, pbar):
     prev = None
     found = False
     for chunk in reader:
