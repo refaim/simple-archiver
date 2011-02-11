@@ -5,23 +5,20 @@ import console
 MAX_BYTE = 255
 
 def compress(reader, fsize, fdst):
-    result = bytearray()
     prev = None
     found = False
     count = 0
     pbar = console.ProgressBar(maxval=fsize)
     pbar.start()
     for chunk in reader:
+        result = bytearray()
         for byte in chunk:
             if found:
                 if byte == prev and count < MAX_BYTE:
                     count += 1
                 else:
                     result.append(count)
-                    if byte != prev:
-                        result.append(byte)
-                    else:
-                        result.append(prev)
+                    result.append(byte)
                     count = 0
                     found = False
             else:
@@ -30,8 +27,7 @@ def compress(reader, fsize, fdst):
             prev = byte
         pbar.update(reader.chunk_size)
         fdst.write(result)
-        result = bytearray()
-    if count > 0:
+    if count:
         fdst.write(bytearray([count]))
     pbar.finish()
 
@@ -44,9 +40,7 @@ def decompress(reader, fsize, fdst):
     for chunk in reader:
         for byte in chunk:
             if found:
-                count = ord(byte)
-                if count:
-                    result.extend(prev * count)
+                result.extend(prev * ord(byte))
                 found = False
                 prev = None
             else:
