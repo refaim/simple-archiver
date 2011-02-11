@@ -13,7 +13,7 @@ class ProgressBar(object):
         if self.width is None:
             # '[===...===] X%\n'
             # length of _getbarstr()
-            self.width = self.terminal_width - len('[]') - len(' 100%\n')
+            self.width = (self.terminal_width - len('[]') - len(' 100%\n')) / 2
             if self.displaysize:
                 # subtract max length of size string
                 self.width -= len(' [1023.99 GiB / 9999.99 TiB]')
