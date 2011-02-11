@@ -19,11 +19,24 @@ COMPRESSION_METHODS = (
 class ArchiverException(Exception): pass
 
 def error(message):
-    print(u'sar: %s' % message)
+    print(u'%s: error: %s' % (os.path.basename(__file__), message))
     return 1
 
+def check_access(path, mode):
+    strings = {
+        os.R_OK: 'reading from',
+        os.W_OK: 'writing to',
+    }
+    if not os.access(path, mode):
+        raise ArchiverException(
+            u'Not enough rights for %s %s' % (strings[mode], path))
+
+def check_existence(path):
+    if not os.path.exists(path):
+        raise ArchiverException(u'File not found: %s' % path)
+
 def main():
-    oparser = optparse.OptionParser(usage='%prog [options] <archive> [files]')
+    oparser = optparse.OptionParser(usage='%prog -f <archive> [options] [files...]')
     oparser.disable_interspersed_args()
 
     optgroup = optparse.OptionGroup(oparser, 'Operations')
@@ -36,53 +49,54 @@ def main():
     oparser.add_option('-m', '--method', default='rle',
         help='compression method [{0}] (%default by default)'.format(
             '|'.join(COMPRESSION_METHODS)))
+    oparser.add_option('-f', '--file', dest='archive', metavar='FILE',
+        help='archive file name')
 
     (options, args) = oparser.parse_args()
+
     if not (options.create or options.extract):
         oparser.error('Missing operation')
     if options.create and options.extract:
         oparser.error('Only one operation must be specified')
-    # !!!
-    if (options.create and len(args) < 2):# or (options.extract and len(args) > 1):
-        oparser.error('Wrong number of arguments')
+    if not options.archive:
+        oparser.error('Missing archive file name')
+    if options.extract:
+        check_existence(options.archive)
+        check_access(options.archive, os.R_OK)
+
     if options.method not in COMPRESSION_METHODS:
         oparser.error(u'Unknown compression method: %s' % options.method)
-    args = [os.path.abspath(arg).decode(locale.getpreferredencoding())
-        for arg in args]
+    compressor = __import__('algorithms.%s' % options.method, fromlist=['algorithms'])
 
-    # !!!
-    archive = args[0]
-    archive_dir = os.path.dirname(archive)
-    files = args[1:]
+    work_dir = os.path.dirname(options.archive) or os.getcwd()
+    check_access(work_dir, os.R_OK)
+    check_access(work_dir, os.W_OK)
 
     if options.extract:
-        if not os.access(archive_dir, os.R_OK):
-            return error(u'Not enough rights for reading from %s' % archive_dir)
+        process = compressor.uncompress
+        # temporary
+        src = options.archive
+        dst = options.archive + '.ex'
     else:
-        if not os.access(archive_dir, os.W_OK):
-            return error(u'Not enough rights for writing to %s' % archive_dir)
-        #files = args[1:]
-        for path in files:
-            if not os.access(path, os.R_OK):
-                return error(u'Not enough rights for reading from %s' % path)
-
-    worker = __import__('algorithms.%s' % options.method, fromlist=['algorithms'])
-
-    if options.create:
-        src = files[0]
-        dst = archive
-        handler = worker.compress
-    else:
-        src = archive
-        dst = files[0]
-        handler = worker.uncompress
+        process = compressor.compress
+        if not args:
+            oparser.error('Wrong number of arguments')
+        else:
+            files = []
+            for arg in args:
+                check_existence(arg)
+                check_access(arg, os.R_OK)
+                files.append(arg)
+        # temporary
+        src = args[0]
+        dst = options.archive
 
     with open(src, 'rb') as fsrc:
         with open(dst, 'wb') as fdst:
             freader = reader.BufferedReader(fsrc, reader.calc_buffer_size(src))
             pbar = console.ProgressBar(maxval=os.path.getsize(src))
             pbar.start()
-            handler(freader, fdst, pbar)
+            process(freader, fdst, pbar)
             pbar.finish()
 
     return 0
@@ -93,5 +107,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Interrupted by user'.ljust(console.getTerminalWidth()))
     except ArchiverException, ex:
-        print(ex.args[0])
+        error(ex.args[0])
     sys.exit(1)
