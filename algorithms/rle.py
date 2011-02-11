@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import console
-
 MAX_BYTE = 255
 
-def compress(reader, fsize, fdst):
+def compress(reader, fdst, pbar):
     prev = None
     found = False
     count = 0
-    pbar = console.ProgressBar(maxval=fsize)
-    pbar.start()
     for chunk in reader:
         result = bytearray()
         for byte in chunk:
@@ -29,15 +25,12 @@ def compress(reader, fsize, fdst):
         fdst.write(result)
     if count:
         fdst.write(bytearray([count]))
-    pbar.finish()
 
-def decompress(reader, fsize, fdst):
-    result = bytearray()
+def decompress(reader, fdst, pbar):
     prev = None
     found = False
-    pbar = console.ProgressBar(maxval=fsize)
-    pbar.start()
     for chunk in reader:
+        result = bytearray()
         for byte in chunk:
             if found:
                 result.extend(prev * ord(byte))
@@ -49,5 +42,3 @@ def decompress(reader, fsize, fdst):
                 prev = byte
         pbar.update(reader.chunk_size)
         fdst.write(result)
-        result = bytearray()
-    pbar.finish()

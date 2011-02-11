@@ -9,7 +9,7 @@ import optparse
 import locale
 
 import console
-from reader import BufferedReader
+import reader
 
 COMPRESSION_METHODS = (
     'huffman',
@@ -65,14 +65,23 @@ def main():
                 return error(u'Not enough rights for reading from %s' % path)
 
     worker = __import__('algorithms.%s' % options.method, fromlist=['algorithms'])
+
     if options.create:
-        with open(files[0], 'rb') as fsrc:
-            with open(archive, 'wb') as fdst:
-                worker.compress(BufferedReader(fsrc), os.path.getsize(files[0]), fdst)
+        src = files[0]
+        dst = archive
+        handler = worker.compress
     else:
-        with open(archive, 'rb') as fsrc:
-            with open(files[0], 'wb') as fdst:
-                worker.decompress(BufferedReader(fsrc), os.path.getsize(archive), fdst)
+        src = archive
+        dst = files[0]
+        handler = worker.decompress
+
+    with open(src, 'rb') as fsrc:
+        with open(dst, 'wb') as fdst:
+            freader = reader.BufferedReader(fsrc, reader.calc_buffer_size(src))
+            pbar = console.ProgressBar(maxval=os.path.getsize(src))
+            pbar.start()
+            handler(freader, fdst, pbar)
+            pbar.finish()
 
     return 0
 
