@@ -21,8 +21,8 @@ def compress(reader, fdst, pbar):
                 result.append(byte)
                 found = byte == prev
             prev = byte
-        pbar.update(reader.chunk_size)
         fdst.write(result)
+        pbar.update(reader.chunk_size)
     if count:
         fdst.write(bytearray([count]))
 
@@ -40,5 +40,5 @@ def decompress(reader, fdst, pbar):
                 result.append(byte)
                 found = byte == prev
                 prev = byte
-        pbar.update(reader.chunk_size)
         fdst.write(result)
+        pbar.update(reader.chunk_size)
