@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 ONE_MBYTE = 2 ** 20
 DEFAULT_COEF = 10
 DEFAULT_BUF_SIZE = DEFAULT_COEF * ONE_MBYTE
@@ -25,4 +27,4 @@ def calc_buffer_size(path):
         if fsize < ONE_MBYTE:
             return fsize
         return fsize / DEFAULT_COEF
-    return reader.DEFAULT_BUFFER_SIZE
+    return DEFAULT_BUF_SIZE
