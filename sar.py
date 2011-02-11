@@ -26,31 +26,33 @@ def main():
     oparser = optparse.OptionParser(usage='%prog [options] <archive> [files]')
     oparser.disable_interspersed_args()
 
-    oparser.add_option('-c', '--create', action='store_true', default=False,
+    optgroup = optparse.OptionGroup(oparser, 'Operations')
+    optgroup.add_option('-c', '--create', action='store_true', default=False,
         help='create archive')
-    oparser.add_option('-x', '--extract', action='store_true', default=False,
+    optgroup.add_option('-x', '--extract', action='store_true', default=False,
         help='extract files from archive')
+    oparser.add_option_group(optgroup)
+
     oparser.add_option('-m', '--method', default='rle',
         help='compression method [{0}] (%default by default)'.format(
             '|'.join(COMPRESSION_METHODS)))
 
     (options, args) = oparser.parse_args()
     if not (options.create or options.extract):
-        oparser.error('')
-        # !!!
+        oparser.error('Missing operation')
     if options.create and options.extract:
-        oparser.error('')
-        # !!!
-    if options.method not in COMPRESSION_METHODS:
-        oparser.error('Unknown compression method: %s' % options.method)
+        oparser.error('Only one operation must be specified')
+    # !!!
     if (options.create and len(args) < 2):# or (options.extract and len(args) > 1):
         oparser.error('Wrong number of arguments')
+    if options.method not in COMPRESSION_METHODS:
+        oparser.error(u'Unknown compression method: %s' % options.method)
     args = [os.path.abspath(arg).decode(locale.getpreferredencoding())
         for arg in args]
-    archive = args[0]
-    archive_dir = os.path.dirname(archive)
 
     # !!!
+    archive = args[0]
+    archive_dir = os.path.dirname(archive)
     files = args[1:]
 
     if options.extract:
