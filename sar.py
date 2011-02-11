@@ -30,17 +30,15 @@ def main():
         help='create archive')
     oparser.add_option('-x', '--extract', action='store_true', default=False,
         help='extract files from archive')
-    oparser.add_option('-m', '--method',
-        help='compression method (%s)' % '|'.join(COMPRESSION_METHODS))
+    oparser.add_option('-m', '--method', default='rle',
+        help='compression method [{0}] (%default by default)'.format(
+            '|'.join(COMPRESSION_METHODS)))
 
     (options, args) = oparser.parse_args()
     if not (options.create or options.extract):
         oparser.error('')
         # !!!
     if options.create and options.extract:
-        oparser.error('')
-        # !!!
-    if not options.method:
         oparser.error('')
         # !!!
     if options.method not in COMPRESSION_METHODS:
