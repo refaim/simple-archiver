@@ -81,11 +81,9 @@ def main():
         if not args:
             oparser.error('Wrong number of arguments')
         else:
-            files = []
             for arg in args:
                 check_existence(arg)
                 check_access(arg, os.R_OK)
-                files.append(arg)
         # temporary
         src = args[0]
         dst = options.archive
