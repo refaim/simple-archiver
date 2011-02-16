@@ -18,7 +18,7 @@ COMPRESSION_METHODS = (
 )
 
 def error(message):
-    print(u'%s: error: %s' % (os.path.basename(__file__), message))
+    print(u'%s: error: %s' % (os.path.basename(__file__), message), end='\r')
     return 1
 
 def check_access(path, mode):
@@ -104,5 +104,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Interrupted by user'.ljust(console.getTerminalWidth()))
     except ArchiverException, ex:
-        error(ex.args[0])
+        error(ex.args[0].ljust(console.getTerminalWidth()))
     sys.exit(1)
