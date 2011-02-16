@@ -10,13 +10,12 @@ import locale
 
 import console
 import reader
+from common import ArchiverException
 
 COMPRESSION_METHODS = (
     'huffman',
     'rle',
 )
-
-class ArchiverException(Exception): pass
 
 def error(message):
     print(u'%s: error: %s' % (os.path.basename(__file__), message))
