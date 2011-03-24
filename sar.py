@@ -8,9 +8,9 @@ import os
 import optparse
 import locale
 
-import console
 import reader
 from common import ArchiverException
+from utils import console
 
 COMPRESSION_METHODS = (
     'huffman',
@@ -18,7 +18,7 @@ COMPRESSION_METHODS = (
 )
 
 def error(message):
-    print(u'%s: error: %s' % (os.path.basename(__file__), message), end='\r')
+    console.writeline(u'%s: error: %s' % (os.path.basename(__file__), message))
     return 1
 
 def check_access(path, mode):
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except KeyboardInterrupt:
-        print('Interrupted by user'.ljust(console.getTerminalWidth()))
+        console.writeline('Interrupted by user')
     except ArchiverException, ex:
-        error(ex.args[0].ljust(console.getTerminalWidth()))
+        error(ex.args[0])
     sys.exit(1)
