@@ -17,10 +17,6 @@ COMPRESSION_METHODS = (
     'rle',
 )
 
-def error(message):
-    console.writeline(u'%s: error: %s' % (os.path.basename(__file__), message))
-    return 1
-
 def check_access(path, mode):
     strings = {
         os.R_OK: 'reading from',
@@ -104,5 +100,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         console.writeline('Interrupted by user')
     except ArchiverException, ex:
-        error(ex.args[0])
+        console.writeline(
+            u'%s: error: %s' % (os.path.basename(__file__), ex.args[0]))
     sys.exit(1)
