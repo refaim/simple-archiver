@@ -3,6 +3,9 @@
 import heapq
 import marshal
 
+import pyximport; pyximport.install()
+import huffman_c
+
 from common import ArchiverException
 
 BITS_IN_BYTE = 8
@@ -12,7 +15,7 @@ def _convert_tree_to_table(tree):
     def convert(tree, prefix):
         if len(tree) == 2:
             byte = tree[1]
-            table[byte] = prefix
+            table[byte] = prefix or '0'
         else:
             convert(tree[1], prefix + '0')
             convert(tree[2], prefix + '1')
@@ -50,7 +53,6 @@ def compress(reader, fdst, pbar):
         if tail_len:
             result.append(tail)
             tail_len = 0
-
         result.extend(code_table[byte] for byte in chunk)
         result = ''.join(result)
 
@@ -58,13 +60,13 @@ def compress(reader, fdst, pbar):
         if tail_len:
             tail, result = result[-tail_len:], result[:-tail_len]
 
-        result = bytearray(int(result[i:i+BITS_IN_BYTE][::-1], 2)
+        result = bytearray(int(result[i:i+BITS_IN_BYTE], 2)
             for i in xrange(0, len(result), BITS_IN_BYTE))
 
         fdst.write(result)
         pbar.update(reader.chunk_size / 2)
     if tail_len:
-        fdst.write(bytearray([int(tail[::-1], 2)]))
+        fdst.write(bytearray([int(tail, 2)]))
 
 def uncompress(reader, fdst, pbar):
     try:
@@ -72,21 +74,18 @@ def uncompress(reader, fdst, pbar):
         source_size = marshal.load(reader.fobj)
     except ValueError:
         raise ArchiverException('Bad file format')
+
+    new_table = {}
+    for k, v in code_table.iteritems():
+        new_table[(int(k, 2), len(k))] = v
+    code_table = new_table
+
     processed_bytes = 0
-    code = ''
     for chunk in reader:
-        result = bytearray()
-        chunk = (bin(ord(byte))[2:][::-1].ljust(8, '0') for byte in chunk)
-        for byte in chunk:
-            for bit in byte:
-                code += bit
-                if code in code_table:
-                    result.append(code_table[code])
-                    code = ''
+        result = huffman_c.uncompress(bytearray(chunk), code_table)
         processed_bytes += len(result)
         if processed_bytes > source_size:
             tail = processed_bytes - source_size
             result = result[:-tail]
-        fdst.write(result)
+        fdst.write(bytearray(result))
         pbar.update(reader.chunk_size)
-
